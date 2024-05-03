@@ -1,9 +1,10 @@
 #if __INTEL_LLVM_COMPILER < 20230000
   #include <CL/sycl.hpp>
+  #include <CL/sycl/INTEL/ac_types/ac_int.hpp>
 #else
   #include <sycl/sycl.hpp>
+  #include <sycl/ext/intel/ac_types/ac_int.hpp>
 #endif
-#include <sycl/ext/intel/ac_types/ac_int.hpp>
 #include <sycl/ext/intel/fpga_extensions.hpp>
 
 #include <bitset>
