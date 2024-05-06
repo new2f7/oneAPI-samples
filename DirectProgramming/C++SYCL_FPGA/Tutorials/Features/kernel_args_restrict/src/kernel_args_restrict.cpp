@@ -48,33 +48,47 @@ void RunKernels(size_t size, std::vector<int> &in, std::vector<int> &nr_out,
               << device.get_info<sycl::info::device::name>().c_str()
               << std::endl;
 
-    buffer in_buf(in);
-    buffer nr_out_buf(nr_out);
-    buffer r_out_buf(r_out);
+    int* in_device = sycl::malloc_device<int>(in.size(), q);
+    q.memcpy(in_device, in.data(), in.size() * sizeof(int));
+    int* nr_out_device = sycl::malloc_device<int>(nr_out.size(), q);
+    int* r_out_device = sycl::malloc_device<int>(r_out.size(), q);
+
+    q.wait();
 
     // submit the task that DOES NOT apply the kernel_args_restrict attribute
     auto e_nr = q.submit([&](handler &h) {
-      accessor in_acc(in_buf, h, read_only);
-      accessor out_acc(nr_out_buf, h, write_only, no_init);
 
       h.single_task<KernelArgsNoRestrict>([=]() {
+        sycl::device_ptr<int> in_device_ptr(in_device);
+        sycl::device_ptr<int> nr_out_device_ptr(nr_out_device);
+
         for (size_t i = 0; i < size; i++) {
-          out_acc[i] = in_acc[i];
+          nr_out_device_ptr[i] = in_device_ptr[i];
         }
       });
     });
+
+    q.wait();
 
     // submit the task that DOES apply the kernel_args_restrict attribute
     auto e_r = q.submit([&](handler &h) {
-      accessor in_acc(in_buf, h, read_only);
-      accessor out_acc(r_out_buf, h, write_only, no_init);
 
       h.single_task<KernelArgsRestrict>([=]() [[intel::kernel_args_restrict]] {
+        sycl::device_ptr<int> in_device_ptr(in_device);
+        sycl::device_ptr<int> r_out_device_ptr(r_out_device);
+
         for (size_t i = 0; i < size; i++) {
-          out_acc[i] = in_acc[i];
+          r_out_device_ptr[i] = in_device_ptr[i];
         }
       });
     });
+
+    q.wait();
+
+    q.memcpy(nr_out.data(), nr_out_device, nr_out.size() * sizeof(int));
+    q.memcpy(r_out.data(), r_out_device, r_out.size() * sizeof(int));
+
+    q.wait();
 
     // measure the execution time of each kernel
     double size_mb = (size * sizeof(int)) / (1024 * 1024);
