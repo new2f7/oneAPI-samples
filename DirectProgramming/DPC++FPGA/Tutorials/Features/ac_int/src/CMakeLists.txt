@@ -27,8 +27,8 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -DFPGA_EMULATOR -Wall ${WIN_FLAG}")
-set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG}")
+set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -DFPGA_EMULATOR -Wall ${WIN_FLAG}")
+set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga")
 set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -Wall ${WIN_FLAG}")
 set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga ${AC_TYPES_FLAG} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 # We do not need to supply the AC_TYPES_FLAG for the 'report' target's linking stage.
